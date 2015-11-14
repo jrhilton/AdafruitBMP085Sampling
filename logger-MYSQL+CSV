@@ -1,0 +1,41 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import datetime
+import MySQLdb
+import Adafruit_BMP.BMP085 as BMP085
+
+sensor = BMP085.BMP085(mode=BMP085.BMP085_ULTRAHIGHRES)
+
+# read pressure and convert from pa to hpa
+p = sensor.read_pressure()
+p = p / 100.00
+
+#read temperature
+t = sensor.read_temperature()
+
+# write CSV (if needed)
+#define datetime for CSV file (if needed)
+#i = datetime.datetime.now()
+#f = open("/mnt/i2c/test.csv","a") #opens file with name of "test.txt"
+#f.write("{},{},{}\n".format(i,p,t))
+#f.close()
+
+# Open database connection
+db = MySQLdb.connect("localhost","weather","weather","i2c" )
+# prepare a cursor object using cursor() method
+cursor = db.cursor()
+# Prepare SQL query to INSERT a record into the database.
+sql = "INSERT INTO bmp180 (pressure, temperature_i) \
+       VALUES ('%s', '%s')" % \
+       (p,t)
+try:
+   # Execute the SQL command
+   cursor.execute(sql)
+   # Commit your changes in the database
+   db.commit()
+except:
+   # Rollback in case there is any error
+   db.rollback()
+# disconnect from server
+db.close()
